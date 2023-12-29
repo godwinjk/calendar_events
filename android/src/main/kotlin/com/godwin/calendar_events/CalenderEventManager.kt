@@ -2,6 +2,7 @@ package com.godwin.calendar_events
 
 import android.Manifest
 import android.accounts.Account
+import android.app.Activity
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
@@ -10,10 +11,35 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.CalendarContract
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.plugin.common.PluginRegistry
 import java.util.TimeZone
 
-object CalenderEventManager {
+object CalenderEventManager :
+    PluginRegistry.RequestPermissionsResultListener {
+    private const val REQUEST_CODE = 102
+    private var binding: ActivityPluginBinding? = null
+    private lateinit var callback: PermissionResultCallback
+    fun requestPermission(activity: Activity) {
+        if (checkCalenderPermission(activity)) {
+            callback.onSuccess()
+            return
+        }
+        val permissions =
+            arrayOf(Manifest.permission.READ_CALENDAR, Manifest.permission.WRITE_CALENDAR)
+        ActivityCompat.requestPermissions(activity, permissions, REQUEST_CODE)
+    }
+
+    fun setActivityBinding(binding: ActivityPluginBinding?) {
+        binding?.addRequestPermissionsResultListener(this)
+        this.binding = binding
+    }
+
+    fun setPermissionCallback(callback: PermissionResultCallback) {
+        this.callback = callback
+    }
 
     fun requestSync(accountName: String, accountType: String) {
         // Specify the account and authority for the calendar you want to sync
@@ -130,9 +156,8 @@ object CalenderEventManager {
             if (calenderEvent.reminderType != null) {
                 setEventReminders(cr, eventId, calenderEvent)
             }
-            calenderEvent.emailInvites
-            if(calenderEvent.emailInvites!= null){
-
+            if (calenderEvent.emailInvites != null) {
+                setEmailAttendees(cr, eventId, calenderEvent.emailInvites)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -159,9 +184,22 @@ object CalenderEventManager {
         cr.insert(CalendarContract.Reminders.CONTENT_URI, values)
     }
 
-    private fun setEmailAttendees(list: List<EmailInvite>){
-
+    private fun setEmailAttendees(
+        cr: ContentResolver,
+        eventId: Long, list: List<EmailInvite>
+    ) {
+        list.forEach {
+            val attendeeValues = ContentValues()
+            attendeeValues.put(CalendarContract.Attendees.EVENT_ID, eventId);
+            attendeeValues.put(CalendarContract.Attendees.ATTENDEE_EMAIL, it.emailId);
+            attendeeValues.put(
+                CalendarContract.Attendees.ATTENDEE_TYPE,
+                if (it.isRequired) CalendarContract.Attendees.TYPE_REQUIRED else CalendarContract.Attendees.TYPE_OPTIONAL
+            );
+            cr.insert(CalendarContract.Attendees.CONTENT_URI, attendeeValues);
+        }
     }
+
     fun checkCalenderPermission(context: Context) = ContextCompat.checkSelfPermission(
         context,
         Manifest.permission.READ_CALENDAR
@@ -170,4 +208,23 @@ object CalenderEventManager {
                 context,
                 Manifest.permission.WRITE_CALENDAR
             ) == PackageManager.PERMISSION_GRANTED
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ): Boolean {
+        if (requestCode == REQUEST_CODE) {
+            val isGranted = grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+            if (isGranted) callback.onSuccess()
+            else callback.onFailed(
+                CalenderError(
+                    "permission_not_granted",
+                    "Permission not granted ${permissions[0]}:${grantResults[0]}"
+                )
+            )
+        }
+        return true
+    }
 }

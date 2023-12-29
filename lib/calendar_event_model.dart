@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'calendar_params.dart';
 import 'calendar_recurrence.dart';
-import 'calendar_reminder_type.dart';
 
 class CalendarEvent {
   final String calendarId;

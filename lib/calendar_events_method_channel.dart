@@ -40,7 +40,7 @@ class MethodChannelCalendarEvents extends CalendarEventsPlatform {
 
   @override
   Future<bool> requestSync(CalendarAccount account) async {
-    if(Platform.isIOS) return true;
+    if (Platform.isIOS) return true;
     try {
       final map = {
         'accountName': account.accountName,

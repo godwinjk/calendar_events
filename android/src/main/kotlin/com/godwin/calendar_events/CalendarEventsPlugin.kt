@@ -1,22 +1,27 @@
 package com.godwin.calendar_events
 
 
+import android.app.Activity
 import android.content.Context
 import io.flutter.embedding.engine.plugins.FlutterPlugin
+import io.flutter.embedding.engine.plugins.activity.ActivityAware
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
 /** CalendarEventsPlugin */
-class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler {
+class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
+    PermissionResultCallback {
     /// The MethodChannel that will the communication between Flutter and native Android
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
-
+    private lateinit var activity: Activity
+    private lateinit var result: Result
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "com.godwin/calendar_events")
         channel.setMethodCallHandler(this)
@@ -25,8 +30,9 @@ class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
-        if (call.method == "getPlatformVersion") {
-            result.success("Android ${android.os.Build.VERSION.RELEASE}")
+        if (call.method == "requestPermission") {
+            this.result = result
+            CalenderEventManager.requestPermission(activity)
         } else if (call.method == "getCalenderAccounts") {
             val getResult = CalenderEventManager.getCalenders(context)
             if (getResult is CalenderListSuccess) {
@@ -76,7 +82,36 @@ class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
+
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
     }
+
+    override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        activity = binding.activity
+        CalenderEventManager.setActivityBinding(binding)
+        CalenderEventManager.setPermissionCallback(this)
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+    }
+
+    override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
+        activity = binding.activity
+        CalenderEventManager.setActivityBinding(binding)
+        CalenderEventManager.setPermissionCallback(this)
+    }
+
+    override fun onDetachedFromActivity() {
+        CalenderEventManager.setActivityBinding(null)
+    }
+
+    override fun onSuccess() {
+        result.success(1)
+    }
+
+    override fun onFailed(error: CalenderError) {
+        result.error(error.errorCode, error.details, null)
+    }
+
 }

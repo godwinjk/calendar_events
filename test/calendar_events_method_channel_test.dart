@@ -1,11 +1,10 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:calendar_events/calendar_events_method_channel.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  MethodChannelCalendarEvents platform = MethodChannelCalendarEvents();
+  // MethodChannelCalendarEvents platform = MethodChannelCalendarEvents();
   const MethodChannel channel = MethodChannel('calendar_events');
 
   setUp(() {

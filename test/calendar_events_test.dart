@@ -7,8 +7,6 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 class MockCalendarEventsPlatform
     with MockPlatformInterfaceMixin
     implements CalendarEventsPlatform {
-
-
   @override
   Future<bool> addEvent(CalendarEvent event) {
     // TODO: implement addEvent
@@ -41,7 +39,8 @@ class MockCalendarEventsPlatform
 }
 
 void main() {
-  final CalendarEventsPlatform initialPlatform = CalendarEventsPlatform.instance;
+  final CalendarEventsPlatform initialPlatform =
+      CalendarEventsPlatform.instance;
 
   test('$MethodChannelCalendarEvents is the default instance', () {
     expect(initialPlatform, isInstanceOf<MethodChannelCalendarEvents>());
