@@ -1,3 +1,11 @@
+## 1.0.1
+```dart
+///This method is now available on both Android and iOS.
+_requestSync(CalendarAccount account) async{
+  bool = await _calenderEventsPlugin.requestSync(account);
+}
+```
+
 ## 1.0.0
 
 ## Use it

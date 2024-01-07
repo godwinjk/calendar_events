@@ -96,7 +96,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   _requestPermission() async {
-    if (Platform.isIOS) {
+    _calenderEventsPlugin.requestPermission();
+   /* if (Platform.isIOS) {
       _calenderEventsPlugin.requestPermission();
       return;
     }
@@ -104,7 +105,7 @@ class _MyAppState extends State<MyApp> {
       if (await Permission.calendarFullAccess.request().isGranted) {
         _checkPermission();
       }
-    }
+    }*/
   }
 
   _checkPermission() async {

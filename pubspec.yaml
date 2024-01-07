@@ -1,6 +1,6 @@
 name: calendar_events
 description: A simple plugin for flutter to play with calendar events. You can easily fetch calendar accounts and add events.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/godwinjk/calendar_events
 
 environment:

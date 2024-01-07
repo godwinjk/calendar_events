@@ -38,7 +38,8 @@ import 'package:calendar_events/calendar_events.dart';
 
 final _calenderEventsPlugin = CalendarEvents();
 
-/// Now you can request permission in iOS platform only. But you can request permission using any other plugin.
+/// Requesting calendar permission. This is important to add events to calendar. 
+/// You should hav permission prior to do anything on calendar.
 _requestPermission() async {
   if (Platform.isIOS) {
     _calenderEventsPlugin.requestPermission();
