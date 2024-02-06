@@ -84,7 +84,7 @@ object CalenderEventManager :
                             it.getString(it.getColumnIndex(CalendarContract.Calendars.ACCOUNT_TYPE))
 
                         val calenderMap = hashMapOf<String, Any>()
-                        calenderMap["calendarId"] = calendarId
+                        calenderMap["calendarId"] = calendarId.toString()
                         calenderMap["accountName"] = accountName
                         calenderMap["accountType"] = accountType
                         listOfCalender.add(calenderMap)

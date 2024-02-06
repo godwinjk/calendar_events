@@ -1,3 +1,7 @@
+## 1.0.2
+
+- Bug fixes
+
 ## 1.0.1
 ```dart
 ///This method is now available on both Android and iOS.

@@ -33,7 +33,7 @@ class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         if (call.method == "requestPermission") {
             this.result = result
             CalenderEventManager.requestPermission(activity)
-        } else if (call.method == "getCalenderAccounts") {
+        } else if (call.method == "getCalendarAccounts") {
             val getResult = CalenderEventManager.getCalenders(context)
             if (getResult is CalenderListSuccess) {
                 result.success(getResult.list)
