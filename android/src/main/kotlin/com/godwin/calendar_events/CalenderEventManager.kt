@@ -62,12 +62,16 @@ object CalenderEventManager :
     }
 
     fun getCalenders(context: Context): CalenderListResult {
-        val listOfCalender = mutableListOf<Map<String, Any>>()
+        val listOfCalender = mutableListOf<Map<String, Any?>>()
         if (checkCalenderPermission(context)) {
             val projection = arrayOf(
                 CalendarContract.Calendars._ID,
                 CalendarContract.Calendars.ACCOUNT_NAME,
-                CalendarContract.Calendars.ACCOUNT_TYPE
+                CalendarContract.Calendars.ACCOUNT_TYPE,
+                CalendarContract.Calendars.IS_PRIMARY,
+                CalendarContract.Calendars.OWNER_ACCOUNT,
+                CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+                CalendarContract.Calendars.NAME,
             )
             val uri: Uri = CalendarContract.Calendars.CONTENT_URI
             // Query for all calendars
@@ -82,11 +86,23 @@ object CalenderEventManager :
                             it.getString(it.getColumnIndex(CalendarContract.Calendars.ACCOUNT_NAME))
                         val accountType =
                             it.getString(it.getColumnIndex(CalendarContract.Calendars.ACCOUNT_TYPE))
+                        val isPrimary =
+                            it.getInt(it.getColumnIndex(CalendarContract.Calendars.IS_PRIMARY))
+                        val displayName =
+                            it.getString(it.getColumnIndex(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME))
+                        val ownerAccount =
+                            it.getString(it.getColumnIndex(CalendarContract.Calendars.OWNER_ACCOUNT))
+                        val name =
+                            it.getString(it.getColumnIndex(CalendarContract.Calendars.NAME))
 
-                        val calenderMap = hashMapOf<String, Any>()
+                        val calenderMap = hashMapOf<String, Any?>()
                         calenderMap["calendarId"] = calendarId.toString()
                         calenderMap["accountName"] = accountName
                         calenderMap["accountType"] = accountType
+                        calenderMap["isPrimary"] = isPrimary
+                        calenderMap["ownerAccount"] = ownerAccount
+                        calenderMap["displayName"] = displayName
+                        calenderMap["name"] = name
                         listOfCalender.add(calenderMap)
                     } catch (e: Exception) {
                         e.printStackTrace()

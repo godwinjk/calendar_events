@@ -1,3 +1,43 @@
+## 1.0.4
+- Bug fixes
+
+## 1.0.3
+More details added to calendar accounts.
+```dart
+///This class contain basic details of both native platform implementation. 
+///Some of the android feature is not available on iOS so forcefully separate these into two another classes.
+///
+class CalendarAccount {
+  final String calenderId;
+  final String accountName;
+  final String accountType;
+  final AndroidAccountParams? androidAccountParams;
+  final IosAccountParams? iosAccountParams;
+
+  CalendarAccount(this.calenderId, this.accountName, this.accountType,
+      {this.androidAccountParams, this.iosAccountParams});
+}
+///This class contains Android only params that include the primary calender variable.
+///If it is true then you can easily add events to this calender
+class AndroidAccountParams {
+  final bool isPrimary;
+  final String displayName;
+  final String ownerAccount;
+  final String name;
+
+  AndroidAccountParams(
+      this.isPrimary, this.displayName, this.ownerAccount, this.name);
+}
+///This class contains iOS only params.
+class IosAccountParams {
+  final String sourceId;
+  final String sourceType;
+  final String sourceTitle;
+
+  IosAccountParams(this.sourceId, this.sourceType, this.sourceTitle);
+}
+```
+
 ## 1.0.2
 
 - Bug fixes

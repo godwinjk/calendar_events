@@ -71,20 +71,44 @@ class CalendarEventsManagerImpl : CalendarEventManager{
             var dict = Dictionary<String,Any>()
             dict["calendarId"] = calendar.calendarIdentifier
             dict["accountName"] = calendar.title
-            var accountType = 0
+            var accountType = "unknown"
             switch calendar.type {
             case .local:
-                accountType = 0
+                accountType = "local"
             case .calDAV:
-                accountType = 1
+                accountType = "calDAV"
             case .exchange:
-                accountType = 2
+                accountType = "exchange"
             case .subscription:
-                accountType = 3
+                accountType = "subscription"
             case .birthday:
-                accountType = 4
+                accountType = "birthday"
+            @unknown default:
+                accountType = "unknown"
             }
-            dict["accountType"] = "\(accountType)"
+            dict["accountType"] = accountType
+            dict["sourceId"] = calendar.source.sourceIdentifier
+            dict["sourceTitle"] = calendar.source.title
+            
+            var sourceType = "unknown"
+            switch calendar.source.sourceType {
+            case .local:
+                sourceType = "local"
+            case .exchange:
+                sourceType = "exchange"
+            case .calDAV:
+                sourceType = "calDAV"
+            case .mobileMe:
+                sourceType = "mobileMe"
+            case .subscribed:
+                sourceType = "subscribed"
+            case .birthdays:
+                sourceType = "birthdays"
+            @unknown default:
+                sourceType = "unknown"
+            }
+            
+            dict["sourceType"] = sourceType
             
             list.append(dict)
         }

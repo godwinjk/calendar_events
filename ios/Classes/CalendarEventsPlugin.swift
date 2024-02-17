@@ -22,17 +22,14 @@ public class CalendarEventsPlugin: NSObject, FlutterPlugin {
             break
         case "addEvent":
             if let map = call.arguments as? [String: Any] {
-                do{
-                    let calendarEvent = try CalendarUtil.convertToEvent(from: map)
-                    let error = calendarManager.addEvent(calendarEvent: calendarEvent)
-                    if(error != nil){
-                        result(FlutterError(code:error!.errorCode,message: error?.details,details: nil))
-                    }else {
-                        result(1)
-                    }
-                }catch {
-                    result(FlutterError(code:"exception_occurred",message: error.localizedDescription,details: nil))
+                let calendarEvent =  CalendarUtil.convertToEvent(from: map)
+                let error = calendarManager.addEvent(calendarEvent: calendarEvent)
+                if(error != nil){
+                    result(FlutterError(code:error!.errorCode,message: error?.details,details: nil))
+                }else {
+                    result(1)
                 }
+                
             } else {
                 result(FlutterError(
                     code: "ARGUMENT_ERROR",

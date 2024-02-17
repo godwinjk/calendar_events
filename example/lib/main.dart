@@ -77,8 +77,17 @@ class _MyAppState extends State<MyApp> {
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(10),
-                            child: Text(
-                                '1. CalendarId: ${account.calenderId}\n2. accountName: ${account.accountName}\n3. ${account.accountType}'),
+                            child: Builder(builder: (context) {
+                              if (Platform.isAndroid) {
+                                return Text(
+                                    '1. CalendarId: ${account.calenderId}\n2. accountName: ${account.accountName}\n3.Type: ${account.accountType}\n4.DisplayName: ${account.androidAccountParams!.displayName}\n5.Name: ${account.androidAccountParams!.name}\n6.Owner: ${account.androidAccountParams!.ownerAccount}\n7.Primary: ${account.androidAccountParams!.isPrimary}');
+                              }
+                              if (Platform.isIOS) {
+                                return Text(
+                                    '1. CalendarId: ${account.calenderId}\n2. accountName: ${account.accountName}\n3.Type: ${account.accountType}\n4.SourceId: ${account.iosAccountParams!.sourceId}\n5.SourceType: ${account.iosAccountParams!.sourceType}\n6.SourceTitle: ${account.iosAccountParams!.sourceTitle}}');
+                              }
+                              return Container();
+                            }),
                           ),
                         ),
                         const Divider(
@@ -97,7 +106,7 @@ class _MyAppState extends State<MyApp> {
 
   _requestPermission() async {
     _calenderEventsPlugin.requestPermission();
-   /* if (Platform.isIOS) {
+    /* if (Platform.isIOS) {
       _calenderEventsPlugin.requestPermission();
       return;
     }
@@ -123,6 +132,8 @@ class _MyAppState extends State<MyApp> {
         context: context,
         builder: (context) {
           return Container(
+            width: 100,
+            height: 200,
             color: Theme.of(context).primaryColor,
             child: Center(
               child: ElevatedButton(

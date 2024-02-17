@@ -8,15 +8,15 @@ In your `pubspec.yaml` file within your Flutter Project:
 
 ```yaml
 dependencies:
-  calendar_events: ^1.0.0
+  calendar_events: ^1.0.4
 ```
 ### Android integration
 
-The plugin doesn't need any special permissions by default to add events to the calendar. However, events can also be added without launching the calendar application, for this it is needed to add calendar permissions to your `AndroidManifest.xml`
+For adding events without launching the calendar application, you should add calendar permissions to your `AndroidManifest.xml`
 
 ```xml
-<uses-permission android:name="android.permission.WRITE_CALENDAR" />
-<uses-permission android:name="android.permission.READ_CALENDAR" />
+<uses-permission android:name="android.permission.WRITE_CALENDAR"/>
+<uses-permission android:name="android.permission.READ_CALENDAR"/>
 ```
 
 ### iOS integration
@@ -32,7 +32,7 @@ In order to make this plugin work on iOS 10+, be sure to add this to your `info.
 <string>We need access to your calendars to provide awesome features.</string>
 ```
 
-## Use it
+## Using the plugin
 ```dart
 import 'package:calendar_events/calendar_events.dart';
 
@@ -91,10 +91,37 @@ _requestSync(CalendarAccount account) async{
 
 #### 1. CalendarAccount
 ```dart
+///This class contain basic details of both native platform implementation. 
+///Some of the android feature is not available on iOS so forcefully separate these into two another classes.
+///
 class CalendarAccount {
   final String calenderId;
   final String accountName;
   final String accountType;
+  final AndroidAccountParams? androidAccountParams;
+  final IosAccountParams? iosAccountParams;
+
+  CalendarAccount(this.calenderId, this.accountName, this.accountType,
+      {this.androidAccountParams, this.iosAccountParams});
+}
+///This class contains Android only params that include the primary calender variable.
+///If it is true then you can easily add events to this calender
+class AndroidAccountParams {
+  final bool isPrimary;
+  final String displayName;
+  final String ownerAccount;
+  final String name;
+
+  AndroidAccountParams(
+      this.isPrimary, this.displayName, this.ownerAccount, this.name);
+}
+
+class IosAccountParams {
+  final String sourceId;
+  final String sourceType;
+  final String sourceTitle;
+
+  IosAccountParams(this.sourceId, this.sourceType, this.sourceTitle);
 }
 ```
 #### 2. CalendarEvent
@@ -145,3 +172,11 @@ class EventRecurrence {
   final String? rRule;
 }
 ```
+
+## Upcoming
+- Platform specific details will be added to calendar account class
+- Fetch events will be added in future releases
+
+## Support
+- If you want to support me, please donate [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/paypalme/godwinj)
+- If you want to support the project feel free to make a PR

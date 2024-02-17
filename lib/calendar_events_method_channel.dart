@@ -25,8 +25,27 @@ class MethodChannelCalendarEvents extends CalendarEventsPlatform {
           var calendarId = map['calendarId'] as String;
           var accountName = map["accountName"] as String;
           var accountType = map["accountType"] as String;
-          calendarList
-              .add(CalendarAccount(calendarId, accountName, accountType));
+          IosAccountParams? iosAccountParams;
+          AndroidAccountParams? androidAccountParams;
+
+          if (Platform.isIOS) {
+            var sourceId = map["sourceId"] as String;
+            var sourceTitle = map["sourceTitle"] as String;
+            var sourceType = map["sourceType"] as String;
+            iosAccountParams =
+                IosAccountParams(sourceId, sourceType, sourceTitle);
+          } else if (Platform.isAndroid) {
+            var isPrimary = map["isPrimary"] as int;
+            var displayName = map["displayName"] as String?;
+            var ownerAccount = map["ownerAccount"] as String?;
+            var name = map["name"] as String?;
+            androidAccountParams = AndroidAccountParams(
+                isPrimary == 1, displayName ?? '', ownerAccount ??'', name ??'');
+          }
+
+          calendarList.add(CalendarAccount(calendarId, accountName, accountType,
+              androidAccountParams: androidAccountParams,
+              iosAccountParams: iosAccountParams));
         }
         return calendarList;
       }
