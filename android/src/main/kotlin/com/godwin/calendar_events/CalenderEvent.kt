@@ -1,7 +1,8 @@
 package com.godwin.calendar_events
 
-class CalenderEvent(
-    val calenderId: Long,
+class CalendarEvent(
+    var eventId: String?,
+    val calendarId: Long,
     val title: String,
     val desc: String,
     val location: String,

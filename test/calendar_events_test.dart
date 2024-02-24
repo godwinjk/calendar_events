@@ -8,12 +8,6 @@ class MockCalendarEventsPlatform
     with MockPlatformInterfaceMixin
     implements CalendarEventsPlatform {
   @override
-  Future<bool> addEvent(CalendarEvent event) {
-    // TODO: implement addEvent
-    throw UnimplementedError();
-  }
-
-  @override
   Future<CalendarPermission> checkCalendarPermission() {
     // TODO: implement checkCalendarPermission
     throw UnimplementedError();
@@ -34,6 +28,30 @@ class MockCalendarEventsPlatform
   @override
   Future<int> requestPermission() {
     // TODO: implement requestPermission
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<String?> addEvent(CalendarEvent event) {
+    // TODO: implement addEvent
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<String?> deleteEvent(CalendarEvent event) {
+    // TODO: implement deleteEvent
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<String?> updateEvent(CalendarEvent event) {
+    // TODO: implement updateEvent
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<String?> deleteEventWithId(String eventId) {
+    // TODO: implement deleteEventWithId
     throw UnimplementedError();
   }
 }

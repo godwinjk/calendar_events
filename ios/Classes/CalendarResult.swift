@@ -12,6 +12,10 @@ enum CalendarListResult {
     case failed(error: CalendarError)
 }
 
-
+enum CalendarEventResult{
+    case success(event: CalendarEvent)
+    case deleteSuccess(eventId: String?)
+    case failed(error: CalendarError)
+}
 
 

@@ -17,13 +17,13 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.PluginRegistry
 import java.util.TimeZone
 
-object CalenderEventManager :
+object CalendarEventManager :
     PluginRegistry.RequestPermissionsResultListener {
     private const val REQUEST_CODE = 102
     private var binding: ActivityPluginBinding? = null
     private lateinit var callback: PermissionResultCallback
     fun requestPermission(activity: Activity) {
-        if (checkCalenderPermission(activity)) {
+        if (checkCalendarPermission(activity)) {
             callback.onSuccess()
             return
         }
@@ -61,9 +61,9 @@ object CalenderEventManager :
         ContentResolver.requestSync(account, authority, extras)
     }
 
-    fun getCalenders(context: Context): CalenderListResult {
-        val listOfCalender = mutableListOf<Map<String, Any?>>()
-        if (checkCalenderPermission(context)) {
+    fun getCalendars(context: Context): CalendarListResult {
+        val listOfCalendar = mutableListOf<Map<String, Any?>>()
+        if (checkCalendarPermission(context)) {
             val projection = arrayOf(
                 CalendarContract.Calendars._ID,
                 CalendarContract.Calendars.ACCOUNT_NAME,
@@ -95,35 +95,35 @@ object CalenderEventManager :
                         val name =
                             it.getString(it.getColumnIndex(CalendarContract.Calendars.NAME))
 
-                        val calenderMap = hashMapOf<String, Any?>()
-                        calenderMap["calendarId"] = calendarId.toString()
-                        calenderMap["accountName"] = accountName
-                        calenderMap["accountType"] = accountType
-                        calenderMap["isPrimary"] = isPrimary
-                        calenderMap["ownerAccount"] = ownerAccount
-                        calenderMap["displayName"] = displayName
-                        calenderMap["name"] = name
-                        listOfCalender.add(calenderMap)
+                        val calendarMap = hashMapOf<String, Any?>()
+                        calendarMap["calendarId"] = calendarId.toString()
+                        calendarMap["accountName"] = accountName
+                        calendarMap["accountType"] = accountType
+                        calendarMap["isPrimary"] = isPrimary
+                        calendarMap["ownerAccount"] = ownerAccount
+                        calendarMap["displayName"] = displayName
+                        calendarMap["name"] = name
+                        listOfCalendar.add(calendarMap)
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
                 }
             }
         } else {
-            return CalenderListFailed(
-                CalenderError(
+            return CalendarListFailed(
+                CalendarError(
                     "permission_denied",
-                    "Please give calender permission"
+                    "Please give calendar permission"
                 )
             )
         }
-        return CalenderListSuccess(listOfCalender)
+        return CalendarListSuccess(listOfCalendar)
     }
 
     fun addEventToCalendar(
         context: Context,
-        calenderEvent: CalenderEvent
-    ): CalenderError? {
+        calendarEvent: CalendarEvent
+    ): CalendarEventResult {
         try {
             val cr: ContentResolver = context.contentResolver
             val values = ContentValues()
@@ -131,36 +131,38 @@ object CalenderEventManager :
             // Calendar
             values.put(
                 CalendarContract.Events.CALENDAR_ID,
-                calenderEvent.calenderId
+                calendarEvent.calendarId
             )  // Use 1 for the primary calendar
 
             // Event details
-            values.put(CalendarContract.Events.TITLE, calenderEvent.title)
-            values.put(CalendarContract.Events.EVENT_LOCATION, calenderEvent.location)
-            values.put(CalendarContract.Events.DESCRIPTION, calenderEvent.desc)
+            values.put(CalendarContract.Events.TITLE, calendarEvent.title)
+            values.put(CalendarContract.Events.EVENT_LOCATION, calendarEvent.location)
+            values.put(CalendarContract.Events.DESCRIPTION, calendarEvent.desc)
 
             // Time
-            values.put(CalendarContract.Events.DTSTART, calenderEvent.start)
-            values.put(CalendarContract.Events.DTEND, calenderEvent.end)
+            values.put(CalendarContract.Events.DTSTART, calendarEvent.start)
+            values.put(CalendarContract.Events.DTEND, calendarEvent.end)
 
-            val allDay = if (calenderEvent.allDay == null) false else calenderEvent.allDay == 1
+            val allDay = if (calendarEvent.allDay == null) false else calendarEvent.allDay == 1
             values.put(CalendarContract.EXTRA_EVENT_ALL_DAY, allDay)
             val timezone =
-                calenderEvent.timeZone ?: TimeZone.getDefault().id
+                calendarEvent.timeZone ?: TimeZone.getDefault().id
             values.put(CalendarContract.Events.EVENT_TIMEZONE, timezone)  // 2 hours
 
             // Status
             values.put(CalendarContract.Events.STATUS, CalendarContract.Events.STATUS_CONFIRMED)
-            if (calenderEvent.recurrence != null) {
-                values.put(CalendarContract.Events.RRULE, calenderEvent.recurrence)
+            if (calendarEvent.recurrence != null) {
+                values.put(CalendarContract.Events.RRULE, calendarEvent.recurrence)
             }
             // Save the event
             val uri: Uri? = cr.insert(CalendarContract.Events.CONTENT_URI, values)
             val eventId: Long = uri!!.lastPathSegment!!.toLong()
 
+            calendarEvent.eventId = eventId.toString()
+
             val cValues = ContentValues()
-            values.put(CalendarContract.Calendars.SYNC_EVENTS, 1)
-            values.put(CalendarContract.Calendars.VISIBLE, 1)
+            cValues.put(CalendarContract.Calendars.SYNC_EVENTS, 1)
+            cValues.put(CalendarContract.Calendars.VISIBLE, 1)
 
             cr.update(
                 ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, eventId),
@@ -169,33 +171,173 @@ object CalenderEventManager :
                 null
             )
             // Optionally, you can set reminders for the event
-            if (calenderEvent.reminderType != null) {
-                setEventReminders(cr, eventId, calenderEvent)
+            if (calendarEvent.reminderType != null) {
+                setEventReminders(cr, eventId, calendarEvent)
             }
-            if (calenderEvent.emailInvites != null) {
-                setEmailAttendees(cr, eventId, calenderEvent.emailInvites)
+            if (calendarEvent.emailInvites != null) {
+                setEmailAttendees(cr, eventId, calendarEvent.emailInvites)
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            return CalenderError("exception_occurred", e.message ?: "Exception Occurred")
+            return CalendarEventFailed(
+                CalendarError(
+                    "exception_occurred",
+                    e.message ?: "Exception Occurred"
+                )
+            )
         }
-        return null
+
+        return CalendarEventSuccess(calendarEvent)
+    }
+
+    fun updateEvent(
+        context: Context,
+        calendarEvent: CalendarEvent
+    ): CalendarEventResult {
+        try {
+            if (calendarEvent.eventId == null) return CalendarEventFailed(
+                CalendarError(
+                    "event_id_missing",
+                    "Event id missing, can't proceed"
+                )
+            )
+            val cr: ContentResolver = context.contentResolver
+            val values = ContentValues()
+
+            // Calendar
+            values.put(
+                CalendarContract.Events.CALENDAR_ID,
+                calendarEvent.calendarId
+            )  // Use 1 for the primary calendar
+
+            // Event details
+            values.put(CalendarContract.Events.TITLE, calendarEvent.title)
+            values.put(CalendarContract.Events.EVENT_LOCATION, calendarEvent.location)
+            values.put(CalendarContract.Events.DESCRIPTION, calendarEvent.desc)
+
+            // Time
+            values.put(CalendarContract.Events.DTSTART, calendarEvent.start)
+            values.put(CalendarContract.Events.DTEND, calendarEvent.end)
+
+            val allDay = if (calendarEvent.allDay == null) false else calendarEvent.allDay == 1
+            values.put(CalendarContract.EXTRA_EVENT_ALL_DAY, allDay)
+            val timezone =
+                calendarEvent.timeZone ?: TimeZone.getDefault().id
+            values.put(CalendarContract.Events.EVENT_TIMEZONE, timezone)  // 2 hours
+
+            // Status
+            values.put(CalendarContract.Events.STATUS, CalendarContract.Events.STATUS_CONFIRMED)
+            if (calendarEvent.recurrence != null) {
+                values.put(CalendarContract.Events.RRULE, calendarEvent.recurrence)
+            }
+            val eventId = calendarEvent.eventId?.toLong() ?: 0
+
+            val cValues = ContentValues()
+            cValues.put(CalendarContract.Calendars.SYNC_EVENTS, 1)
+            cValues.put(CalendarContract.Calendars.VISIBLE, 1)
+
+            cr.update(
+                ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, eventId),
+                cValues,
+                null,
+                null
+            )
+            val rows = cr.update(
+                ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId),
+                values,
+                null,
+                null
+            )
+            // Optionally, you can set reminders for the event
+            if (calendarEvent.reminderType != null) {
+                cr.delete(
+                    CalendarContract.Reminders.CONTENT_URI,
+                    "${CalendarContract.Reminders.EVENT_ID}=?",
+                    arrayOf(eventId.toString())
+                )
+                setEventReminders(cr, eventId, calendarEvent)
+            }
+            if (calendarEvent.emailInvites != null) {
+                cr.delete(
+                    CalendarContract.Attendees.CONTENT_URI,
+                    "${CalendarContract.Attendees.EVENT_ID}=?",
+                    arrayOf(eventId.toString())
+                )
+                setEmailAttendees(cr, eventId, calendarEvent.emailInvites)
+            }
+            return if (rows > 0)
+                CalendarEventSuccess(calendarEvent)
+            else CalendarEventFailed(CalendarError("no_rows_affected", "No rows affected"))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return CalendarEventFailed(
+                CalendarError(
+                    "exception_occurred",
+                    e.message ?: "Exception Occurred"
+                )
+            )
+        }
+    }
+
+    fun deleteEvent(
+        context: Context,
+        eventId: String?
+    ): CalendarEventResult {
+        try {
+            if (eventId == null) return CalendarEventFailed(
+                CalendarError(
+                    "event_id_missing",
+                    "Event id missing, can't proceed"
+                )
+            )
+
+            val cr: ContentResolver = context.contentResolver
+
+            val eventIdLng = eventId.toLong()
+            val rows = cr.delete(
+                ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventIdLng),
+                null,
+                null
+            )
+            cr.delete(
+                CalendarContract.Reminders.CONTENT_URI,
+                "${CalendarContract.Reminders.EVENT_ID}=?",
+                arrayOf(eventId.toString())
+            )
+
+            cr.delete(
+                CalendarContract.Attendees.CONTENT_URI,
+                "${CalendarContract.Attendees.EVENT_ID}=?",
+                arrayOf(eventId.toString())
+            )
+            return if (rows > 0)
+                CalendarEventDeleteSuccess(eventId)
+            else CalendarEventFailed(CalendarError("no_rows_affected", "No rows affected"))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return CalendarEventFailed(
+                CalendarError(
+                    "exception_occurred",
+                    e.message ?: "Exception Occurred"
+                )
+            )
+        }
     }
 
     private fun setEventReminders(
         cr: ContentResolver,
         eventId: Long,
-        calenderEvent: CalenderEvent
+        calendarEvent: CalendarEvent
     ) {
         val values = ContentValues()
         values.put(
             CalendarContract.Reminders.MINUTES,
-            calenderEvent.reminderMin ?: 15
+            calendarEvent.reminderMin ?: 15
         )  // 15 minutes before the event
         values.put(CalendarContract.Reminders.EVENT_ID, eventId)
         values.put(
             CalendarContract.Reminders.METHOD,
-            calenderEvent.reminderType ?: CalendarContract.Reminders.METHOD_ALERT
+            calendarEvent.reminderType ?: CalendarContract.Reminders.METHOD_ALERT
         )
         cr.insert(CalendarContract.Reminders.CONTENT_URI, values)
     }
@@ -216,7 +358,7 @@ object CalenderEventManager :
         }
     }
 
-    fun checkCalenderPermission(context: Context) = ContextCompat.checkSelfPermission(
+    fun checkCalendarPermission(context: Context) = ContextCompat.checkSelfPermission(
         context,
         Manifest.permission.READ_CALENDAR
     ) == PackageManager.PERMISSION_GRANTED &&
@@ -235,7 +377,7 @@ object CalenderEventManager :
                     grantResults[0] == PackageManager.PERMISSION_GRANTED
             if (isGranted) callback.onSuccess()
             else callback.onFailed(
-                CalenderError(
+                CalendarError(
                     "permission_not_granted",
                     "Permission not granted ${permissions[0]}:${grantResults[0]}"
                 )

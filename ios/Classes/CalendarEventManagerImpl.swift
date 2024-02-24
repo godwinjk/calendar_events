@@ -9,6 +9,7 @@ import Foundation
 import EventKit
 
 class CalendarEventsManagerImpl : CalendarEventManager{
+
     let eventStore = EKEventStore()
     
     func checkPermission()->Int {
@@ -116,7 +117,7 @@ class CalendarEventsManagerImpl : CalendarEventManager{
         
     }
     
-    func addEvent(calendarEvent: CalendarEvent) -> CalendarError?{
+    func addEvent(calendarEvent: CalendarEvent) -> CalendarEventResult{
         let event = EKEvent(eventStore: eventStore)
         if let alarm = calendarEvent.reminderSec{
             event.addAlarm(EKAlarm(relativeOffset: alarm*(-1)))
@@ -164,9 +165,87 @@ class CalendarEventsManagerImpl : CalendarEventManager{
         do {
             // Save the event to the calendar
             try eventStore.save(event, span: .thisEvent)
+            calendarEvent.eventId = event.eventIdentifier
+            return CalendarEventResult.success(event: calendarEvent)
         } catch {
-            return CalendarError(errorCode:"exception_occurred",details: error.localizedDescription)
+            return CalendarEventResult.failed(error: CalendarError(errorCode:"exception_occurred",details: error.localizedDescription))
         }
-        return nil
+    }
+    
+    func updateEvent(calendarEvent: CalendarEvent) ->  CalendarEventResult{
+        guard let eventId = calendarEvent.eventId else {
+            return CalendarEventResult.failed(error: CalendarError(errorCode: "event_id_missing", details: "Event id is missing"))
+        }
+        guard let event = eventStore.event(withIdentifier: eventId) else {
+            return CalendarEventResult.failed(error:CalendarError(errorCode: "event_not_found", details: "Event with identifier \(eventId) not found"))
+        }
+        
+        event.title = calendarEvent.title
+        event.startDate = Date(timeIntervalSince1970: TimeInterval(calendarEvent.start/1000))
+        event.endDate = Date(timeIntervalSince1970: TimeInterval(calendarEvent.end/1000))
+        if (calendarEvent.timeZone != nil) {
+            event.timeZone = TimeZone(identifier: calendarEvent.timeZone!)
+        }
+        event.location = calendarEvent.location
+        
+        event.notes = calendarEvent.desc
+        
+        if let url = calendarEvent.url{
+            event.url = URL(string: url);
+        }
+        if let allDay = calendarEvent.allDay{
+            event.isAllDay = (allDay == 1)
+        }
+        
+        if let recurrence = calendarEvent.recurrence {
+            let interval = recurrence["interval"] as! Int
+            let frequency = recurrence["frequency"] as! Int
+            let end = recurrence["endDate"] as? Double// Date(milliseconds: (args["startDate"] as! Double))
+            let ocurrences = recurrence["ocurrences"] as? Int
+            
+            let recurrenceRule = EKRecurrenceRule.init(
+                recurrenceWith: EKRecurrenceFrequency(rawValue: frequency)!,
+                interval: interval,
+                end: ocurrences != nil ? EKRecurrenceEnd.init(occurrenceCount: ocurrences!) : end != nil ? EKRecurrenceEnd.init(end: Date(timeIntervalSince1970: end!)) : nil
+            )
+            event.recurrenceRules = [recurrenceRule]
+        }
+        
+        if let calendarId = calendarEvent.calendarId {
+            let calendar = eventStore.calendar(withIdentifier: calendarId)
+            if let calendar = calendar{
+                event.calendar = calendar
+            }
+        } else {
+            event.calendar = eventStore.defaultCalendarForNewEvents
+        }
+        
+        do {
+            // Save the event to the calendar
+            try eventStore.save(event, span: .thisEvent)
+            calendarEvent.eventId = event.eventIdentifier
+            return CalendarEventResult.success(event: calendarEvent)
+        } catch {
+            return CalendarEventResult.failed(error: CalendarError(errorCode:"exception_occurred",details: error.localizedDescription))
+        }
+        
+        
+    }
+    
+    func deleteEvent(eventId: String?) -> CalendarEventResult {
+        guard let eventId = eventId else {
+            return CalendarEventResult.failed(error: CalendarError(errorCode: "event_id_missing", details: "Event id is missing"))
+        }
+        guard let event = eventStore.event(withIdentifier: eventId) else {
+            return CalendarEventResult.failed(error:CalendarError(errorCode: "event_not_found", details: "Event with identifier \(eventId) not found"))
+        }
+        
+        do {
+            // Delete the event from the calendar
+            try eventStore.remove(event, span: .thisEvent)
+            return CalendarEventResult.deleteSuccess(eventId: eventId)
+        } catch {
+            return CalendarEventResult.failed(error: CalendarError(errorCode:"exception_occurred",details: error.localizedDescription))
+        }
     }
 }

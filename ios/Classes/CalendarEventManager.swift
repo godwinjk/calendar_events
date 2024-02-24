@@ -14,5 +14,9 @@ protocol CalendarEventManager{
     
     func getCalendarAccounts()-> CalendarListResult
     
-    func addEvent(calendarEvent: CalendarEvent) -> CalendarError?
+    func addEvent(calendarEvent: CalendarEvent) -> CalendarEventResult
+    
+    func updateEvent(calendarEvent: CalendarEvent) -> CalendarEventResult
+    
+    func deleteEvent(eventId: String?) -> CalendarEventResult
 }

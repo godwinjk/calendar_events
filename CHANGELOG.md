@@ -1,3 +1,48 @@
+## 1.0.5
+- New APIs are added
+  - Update event
+  ```dart 
+    void _updateEvent(CalendarAccount account) async {
+      final event = CalendarEvent(
+        eventId:eventId,
+        calendarId: account.calenderId,
+        title: 'Updated Event',
+        location: 'Location',
+        description: 'desc',
+        start: DateTime.now().add(const Duration(hours: 1)),
+        end: DateTime.now().add(const Duration(hours: 2)),
+        recurrence:
+        EventRecurrence(frequency: EventFrequency.daily, interval: 2));
+
+      var bool = await _calenderEventsPlugin.updateEvent(event);
+    }
+  ```
+    - Delete Event
+  ```dart 
+    void _deleteEvent(CalendarAccount account) async {
+      final event = CalendarEvent(
+        eventId: eventId,
+        calendarId: account.calenderId,
+        title: 'Delete Event',
+        location: 'Location',
+        description: 'desc',
+        start: DateTime.now().add(const Duration(hours: 1)),
+        end: DateTime.now().add(const Duration(hours: 2)),
+        recurrence:
+        EventRecurrence(frequency: EventFrequency.daily, interval: 2));
+
+      var bool = await _calenderEventsPlugin.deleteEvent(event);
+    }
+  ```
+  OR
+    ```dart 
+    void _deleteEvent(CalendarAccount account) async {
+      final event = eventId;
+      var bool = await _calenderEventsPlugin.deleteEvent(eventId);
+    }
+  ```
+- Bug fixes
+
 ## 1.0.4
 - Bug fixes
 

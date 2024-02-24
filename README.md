@@ -8,7 +8,7 @@ In your `pubspec.yaml` file within your Flutter Project:
 
 ```yaml
 dependencies:
-  calendar_events: ^1.0.4
+  calendar_events: ^1.0.5
 ```
 ### Android integration
 

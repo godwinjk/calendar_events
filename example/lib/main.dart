@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:calendar_events_example/detail_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -18,13 +19,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
   final _calenderEventsPlugin = CalendarEvents();
   CalendarPermission? havePermission;
   List<CalendarAccount>? accounts;
   int? selectedCalenderId;
-  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
-      GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
@@ -35,7 +33,6 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: ScaffoldMessenger(
-        key: scaffoldMessengerKey,
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Plugin example app'),
@@ -72,7 +69,9 @@ class _MyAppState extends State<MyApp> {
                       children: [
                         InkWell(
                           onTap: () {
-                            _showDialog(account);
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) =>
+                                    DetailPage(calendarAccount: account)));
                           },
                           child: Container(
                             width: double.infinity,
@@ -125,47 +124,5 @@ class _MyAppState extends State<MyApp> {
   _listAccounts() async {
     accounts = await _calenderEventsPlugin.getCalendarAccounts();
     setState(() {});
-  }
-
-  void _showDialog(CalendarAccount account) {
-    showDialog(
-        context: context,
-        builder: (context) {
-          return Container(
-            width: 100,
-            height: 200,
-            color: Theme.of(context).primaryColor,
-            child: Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  _addEvent(account);
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Add Event'),
-              ),
-            ),
-          );
-        });
-  }
-
-  void _addEvent(CalendarAccount account) async {
-    final event = CalendarEvent(
-        calendarId: account.calenderId,
-        title: 'Sample Event',
-        location: 'Location',
-        description: 'desc',
-        start: DateTime.now().add(const Duration(hours: 1)),
-        end: DateTime.now().add(const Duration(hours: 2)),
-        recurrence:
-            EventRecurrence(frequency: EventFrequency.daily, interval: 2));
-
-    var bool = await _calenderEventsPlugin.addEvent(event);
-    var showSnackBar = scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(
-        content: Text('Calender added ${bool ? 'success' : 'failed'}')));
-
-    bool = await _calenderEventsPlugin.requestSync(account);
-    if (kDebugMode) {
-      print('Syncing : $bool');
-    }
   }
 }

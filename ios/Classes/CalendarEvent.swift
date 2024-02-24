@@ -8,6 +8,7 @@
 import Foundation
 
 class CalendarEvent {
+    var eventId: String?
     let calendarId: String?
     let title: String
     let desc: String
@@ -20,6 +21,7 @@ class CalendarEvent {
     let recurrence: [String:Any]?
     let url:String?
     init(
+        eventId: String?,
         calendarId: String?,
         title: String,
         desc: String,
@@ -32,6 +34,7 @@ class CalendarEvent {
         recurrence: [String:Any]?,
         url:String?
     ) {
+        self.eventId = eventId
         self.calendarId = calendarId
         self.title = title
         self.desc = desc

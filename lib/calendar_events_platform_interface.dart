@@ -39,7 +39,22 @@ abstract class CalendarEventsPlatform extends PlatformInterface {
     throw UnimplementedError('requestPermission() has not been implemented.');
   }
 
-  Future<bool> addEvent(CalendarEvent event) {
+  Future<String?> addEvent(CalendarEvent event) {
+    throw UnimplementedError(
+        'requestSync(CalendarAccount) has not been implemented.');
+  }
+
+  Future<String?> updateEvent(CalendarEvent event) {
+    throw UnimplementedError(
+        'requestSync(CalendarAccount) has not been implemented.');
+  }
+
+  Future<String?> deleteEvent(CalendarEvent event) {
+    throw UnimplementedError(
+        'requestSync(CalendarAccount) has not been implemented.');
+  }
+
+  Future<String?> deleteEventWithId(String eventId) {
     throw UnimplementedError(
         'requestSync(CalendarAccount) has not been implemented.');
   }

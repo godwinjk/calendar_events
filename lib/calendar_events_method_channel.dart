@@ -39,8 +39,8 @@ class MethodChannelCalendarEvents extends CalendarEventsPlatform {
             var displayName = map["displayName"] as String?;
             var ownerAccount = map["ownerAccount"] as String?;
             var name = map["name"] as String?;
-            androidAccountParams = AndroidAccountParams(
-                isPrimary == 1, displayName ?? '', ownerAccount ??'', name ??'');
+            androidAccountParams = AndroidAccountParams(isPrimary == 1,
+                displayName ?? '', ownerAccount ?? '', name ?? '');
           }
 
           calendarList.add(CalendarAccount(calendarId, accountName, accountType,
@@ -102,16 +102,75 @@ class MethodChannelCalendarEvents extends CalendarEventsPlatform {
   }
 
   @override
-  Future<bool> addEvent(CalendarEvent event) async {
+  Future<String?> addEvent(CalendarEvent event) async {
     try {
-      final result =
-          await methodChannel.invokeMethod<int>('addEvent', event.toJson());
-      return result == 1;
+      final result = await methodChannel.invokeMethod<Map<dynamic, dynamic>?>(
+          'addEvent', event.toJson());
+      if (result != null) {
+        String eventId = result['eventId'] as String;
+        return eventId;
+      }
     } on Exception catch (e) {
       if (kDebugMode) {
         print(e.toString());
       }
     }
-    return false;
+    return null;
+  }
+
+  @override
+  Future<String?> updateEvent(CalendarEvent event) async {
+    assert(event.eventId != null, 'Event Id should not be null');
+
+    try {
+      final result = await methodChannel.invokeMethod<Map<dynamic, dynamic>>(
+          'updateEvent', event.toJson());
+      if (result != null) {
+        String eventId = result['eventId'] as String;
+        return eventId;
+      }
+    } on Exception catch (e) {
+      if (kDebugMode) {
+        print(e.toString());
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<String?> deleteEvent(CalendarEvent event) async {
+    assert(event.eventId != null, 'Event Id should not be null');
+    try {
+      final result = await methodChannel.invokeMethod<Map<dynamic, dynamic>>(
+          'deleteEvent', event.toJson());
+      if (result != null) {
+        String eventId = result['eventId'] as String;
+        return eventId;
+      }
+    } on Exception catch (e) {
+      if (kDebugMode) {
+        print(e.toString());
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<String?> deleteEventWithId(String eventId) async {
+    try {
+      final result = await methodChannel
+          .invokeMethod<Map<dynamic, dynamic>>('deleteEvent', {
+        'eventId': eventId,
+      });
+      if (result != null) {
+        String eventId = result['eventId'] as String;
+        return eventId;
+      }
+    } on Exception catch (e) {
+      if (kDebugMode) {
+        print(e.toString());
+      }
+    }
+    return null;
   }
 }

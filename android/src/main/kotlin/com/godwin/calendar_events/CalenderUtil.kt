@@ -5,10 +5,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-internal class CalenderUtil {
+internal class CalendarUtil {
     companion object {
-        fun convertToEvent(map: Map<*, *>): CalenderEvent {
-            val calenderId = (map["calendarId"] as Number).toLong()
+        fun convertToEvent(map: Map<*, *>): CalendarEvent {
+            val eventId = (map["eventId"] as String?)
+            val calendarId = (map["calendarId"] as Number).toLong()
             val title = (map["title"] as String?) ?: ""
             val desc = (map["description"] as String?) ?: ""
             val location = (map["location"] as String?) ?: ""
@@ -28,8 +29,9 @@ internal class CalenderUtil {
 
             val emailInvitesList: List<EmailInvite>? = mapEmailInvites(emailInvites)
 
-            return CalenderEvent(
-                calenderId,
+            return CalendarEvent(
+                eventId,
+                calendarId,
                 title,
                 desc,
                 location,

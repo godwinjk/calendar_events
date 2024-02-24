@@ -4,6 +4,7 @@ import 'calendar_params.dart';
 import 'calendar_recurrence.dart';
 
 class CalendarEvent {
+  final String? eventId;
   final String calendarId;
   final String title;
   final String description;
@@ -28,10 +29,22 @@ class CalendarEvent {
       this.allDay,
       this.recurrence,
       this.androidParams,
-      this.iosParams});
+      this.iosParams,
+      this.eventId});
+
+  static CalendarEvent forDelete(String calendarId) {
+    return CalendarEvent(
+        calendarId: calendarId,
+        title: '',
+        description: '',
+        location: '',
+        start: DateTime.now(),
+        end: DateTime.now());
+  }
 
   Map<String, dynamic> toJson() {
     final params = {
+      'eventId': eventId,
       'title': title,
       'description': description,
       'location': location,

@@ -32,12 +32,12 @@ class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     override fun onMethodCall(call: MethodCall, result: Result) {
         if (call.method == "requestPermission") {
             this.result = result
-            CalenderEventManager.requestPermission(activity)
+            CalendarEventManager.requestPermission(activity)
         } else if (call.method == "getCalendarAccounts") {
-            val getResult = CalenderEventManager.getCalenders(context)
-            if (getResult is CalenderListSuccess) {
+            val getResult = CalendarEventManager.getCalendars(context)
+            if (getResult is CalendarListSuccess) {
                 result.success(getResult.list)
-            } else if (getResult is CalenderListFailed) {
+            } else if (getResult is CalendarListFailed) {
                 result.error(
                     getResult.error.errorCode,
                     getResult.error.details,
@@ -45,7 +45,7 @@ class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 )
             }
         } else if (call.method == "checkPermission") {
-            val havePermission = CalenderEventManager.checkCalenderPermission(context)
+            val havePermission = CalendarEventManager.checkCalendarPermission(context)
             if (havePermission) {
                 result.success(1)
             } else {
@@ -57,7 +57,7 @@ class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 val accountName = map["accountName"] as String
                 val accountType = map["accountType"] as String
 
-                CalenderEventManager.requestSync(accountName, accountType)
+                CalendarEventManager.requestSync(accountName, accountType)
                 result.success(1)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -66,17 +66,59 @@ class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         } else if (call.method == "addEvent") {
             try {
                 val map = call.arguments as Map<*, *>
-                val event = CalenderUtil.convertToEvent(map)
-                val error = CalenderEventManager.addEventToCalendar(context, event)
-                if (error != null) {
-                    result.error(error.errorCode, error.details, null)
+                val event = CalendarUtil.convertToEvent(map)
+                val eventResult = CalendarEventManager.addEventToCalendar(context, event)
+                if (eventResult is CalendarEventSuccess) {
+                    val eventMap = hashMapOf<String, String>()
+                    eventMap["eventId"] = eventResult.event.eventId.toString()
+                    result.success(eventMap)
+                } else if (eventResult is CalendarEventFailed) {
+                    result.error(eventResult.error.errorCode, eventResult.error.details, null)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 result.error("invalid_data", e.message, null)
                 return
             }
-            result.success(1)
+        } else if (call.method == "updateEvent") {
+            try {
+                val map = call.arguments as Map<*, *>
+                val event = CalendarUtil.convertToEvent(map)
+                val eventResult = CalendarEventManager.updateEvent(context, event)
+                if (eventResult is CalendarEventSuccess) {
+                    val eventMap = hashMapOf<String, String>()
+                    eventMap["eventId"] = eventResult.event.eventId.toString()
+                    result.success(eventMap)
+                } else if (eventResult is CalendarEventFailed) {
+                    result.error(eventResult.error.errorCode, eventResult.error.details, null)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                result.error("invalid_data", e.message, null)
+                return
+            }
+        } else if (call.method == "deleteEvent") {
+            try {
+                val map = call.arguments as Map<*, *>
+                val eventId = (map["eventId"] as String?)
+                val eventResult = CalendarEventManager.deleteEvent(context, eventId)
+                if (eventResult is CalendarEventSuccess) {
+                    val eventMap = hashMapOf<String, String>()
+                    eventMap["eventId"] = eventResult.event.eventId.toString()
+                    result.success(eventMap)
+                } else if (eventResult is CalendarEventDeleteSuccess) {
+                    val eventMap = hashMapOf<String, String>()
+                    eventMap["eventId"] = eventResult.eventId
+                    result.success(eventMap)
+                } else if (eventResult is CalendarEventFailed) {
+                    result.error(eventResult.error.errorCode, eventResult.error.details, null)
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                result.error("invalid_data", e.message, null)
+                return
+            }
         } else {
             result.notImplemented()
         }
@@ -89,8 +131,8 @@ class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity
-        CalenderEventManager.setActivityBinding(binding)
-        CalenderEventManager.setPermissionCallback(this)
+        CalendarEventManager.setActivityBinding(binding)
+        CalendarEventManager.setPermissionCallback(this)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
@@ -98,19 +140,19 @@ class CalendarEventsPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
         activity = binding.activity
-        CalenderEventManager.setActivityBinding(binding)
-        CalenderEventManager.setPermissionCallback(this)
+        CalendarEventManager.setActivityBinding(binding)
+        CalendarEventManager.setPermissionCallback(this)
     }
 
     override fun onDetachedFromActivity() {
-        CalenderEventManager.setActivityBinding(null)
+        CalendarEventManager.setActivityBinding(null)
     }
 
     override fun onSuccess() {
         result.success(1)
     }
 
-    override fun onFailed(error: CalenderError) {
+    override fun onFailed(error: CalendarError) {
         result.error(error.errorCode, error.details, null)
     }
 

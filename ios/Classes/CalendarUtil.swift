@@ -9,6 +9,7 @@ import Foundation
 
 class CalendarUtil {
     static func convertToEvent(from map: [String: Any]) -> CalendarEvent {
+        let eventId = map["eventId"] as? String
         let calendarId = map["calendarId"] as? String
         let title = map["title"] as? String ?? ""
         let desc = map["description"] as? String ?? ""
@@ -22,6 +23,7 @@ class CalendarUtil {
         let url = map["url"] as? String
         
         return CalendarEvent(
+            eventId: eventId,
             calendarId: calendarId,
             title: title,
             desc: desc,
